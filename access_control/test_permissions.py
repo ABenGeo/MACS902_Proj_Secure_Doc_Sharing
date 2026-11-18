@@ -82,4 +82,25 @@ print("Test 6 - Charlie attempts revocation:", result)
 # Test 7: Alice attempts to share with a nonexistent user
 result = share_document(1, 101, 99, connection)
 print("Test 7 - Share with nonexistent user:", result)
+
+# Test 8: Alice (owner) always has access
+result = check_access(1, 101, connection)
+print("Test 8 - Owner access:", result)
+
+# Test 9: Bob attempts to share Alice's document
+result = share_document(2, 101, 3, connection)
+print("Test 9 - Non-owner attempts sharing:", result)
+
+# Test 10: Alice attempts to share with herself
+result = share_document(1, 101, 1, connection)
+print("Test 10 - Self-sharing:", result)
+
+# Test 11: Duplicate sharing
+# First, Alice restores Bob's revoked access
+result = share_document(1, 101, 2, connection)
+print("Test 11a - Restore Bob's access:", result)
+
+# Then, Alice tries sharing with Bob again
+result = share_document(1, 101, 2, connection)
+print("Test 11b - Duplicate sharing:", result)
 connection.close()
