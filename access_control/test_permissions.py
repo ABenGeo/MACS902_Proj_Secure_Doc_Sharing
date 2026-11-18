@@ -79,4 +79,7 @@ print("Test 5 - Bob access after revocation:", result)
 result = revoke_access(3, 101, 2, connection)
 print("Test 6 - Charlie attempts revocation:", result)
 
+# Test 7: Alice attempts to share with a nonexistent user
+result = share_document(1, 101, 99, connection)
+print("Test 7 - Share with nonexistent user:", result)
 connection.close()

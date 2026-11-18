@@ -41,6 +41,17 @@ def share_document(owner_id: int, document_id: int,
     if owner_id == recipient_id:
         return False, "You cannot share a document with yourself."
 
+    # Check whether the recipient exists
+    cursor.execute("""
+        SELECT user_id FROM users
+        WHERE user_id = ?
+    """, (recipient_id,))
+
+    recipient = cursor.fetchone()
+
+    if recipient is None:
+        return False, "Recipient user not found."
+
     # Check whether permission already exists
     cursor.execute("""
         SELECT status FROM permissions
