@@ -1,13 +1,12 @@
 
 def create_permissions_table(db_connection):
-    """Create the permissions table if it does not exist."""
 
     cursor = db_connection.cursor()
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS permissions (
             permission_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            document_id INTEGER NOT NULL,
+            document_id TEXT NOT NULL,
             owner_id INTEGER NOT NULL,
             recipient_id INTEGER NOT NULL,
             status TEXT NOT NULL DEFAULT 'active',
@@ -18,7 +17,7 @@ def create_permissions_table(db_connection):
     db_connection.commit()
 
 
-def share_document(owner_id: int, document_id: int,
+def share_document(owner_id: int, document_id: str,
                    recipient_id: int, db_connection):
     """Allow a document owner to share a document."""
 
@@ -82,7 +81,7 @@ def share_document(owner_id: int, document_id: int,
     return True, "Document shared successfully."
 
 
-def check_access(user_id: int, document_id: int, db_connection):
+def check_access(user_id: int, document_id: str, db_connection):
     """Check whether a user is allowed to access a document."""
 
     cursor = db_connection.cursor()
@@ -112,7 +111,7 @@ def check_access(user_id: int, document_id: int, db_connection):
     return permission is not None and permission[0] == "active"
 
 
-def revoke_access(owner_id: int, document_id: int,
+def revoke_access(owner_id: int, document_id: str,
                   recipient_id: int, db_connection):
     """Allow the document owner to revoke a recipient's access."""
 
