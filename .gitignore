@@ -16,3 +16,32 @@ venv/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Local database
+*.db
+*.sqlite
+*.sqlite3
+
+# Private encryption and signing keys
+private_keys/
+signing_keys/
+*.pem
+*.key
+
+# Generated encrypted and decrypted documents
+encrypted_documents/
+decrypted_documents/
+*.enc
+*.bin
+
+# Temporary and log files
+*.tmp
+*.log
+
+# Additional environment files
+.env.*
+!.env.example
+
+# Operating system files
+.DS_Store
+Thumbs.db
