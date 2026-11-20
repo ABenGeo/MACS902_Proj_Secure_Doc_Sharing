@@ -23,6 +23,19 @@ def decrypt_file(encrypted_file, decrypted_file, aes_key):
     Path(decrypted_file).write_bytes(file_data) # Saves the recovered document
     return "Document decrypted successfully!"
 
+def encrypt_uploaded_file(file_data, encrypted_file):
+    aes_key = AESGCM.generate_key(bit_length=256)
+    nonce = os.urandom(12)
+    ciphertext = AESGCM(aes_key).encrypt(
+        nonce,
+        file_data,
+        None
+    )
+    encrypted_path = Path(encrypted_file)
+    encrypted_path.parent.mkdir(parents=True, exist_ok=True)
+    encrypted_path.write_bytes(nonce + ciphertext)
+    return aes_key
+
 if __name__ == "__main__":
     aes_key = encrypt_file(
         "confidential_document.txt",
@@ -39,7 +52,6 @@ if __name__ == "__main__":
     original = Path("confidential_document.txt").read_bytes()
     recovered = Path("decrypted_document.txt").read_bytes()
     print("3. Document recovery verified:", original == recovered)
-
     # Testing decryption with a wrong AES key
     wrong_key = AESGCM.generate_key(bit_length=256)
     try:
@@ -51,7 +63,6 @@ if __name__ == "__main__":
         print("4. Incorrect key test: Failed")
     except InvalidTag:
         print("4. Incorrect key test: Passed - decryption rejected!")
-
     # Testing detection of modified encrypted data
     encrypted_data = bytearray(Path("encrypted_document.bin").read_bytes())
     encrypted_data[-1] ^= 1 # Modify one byte of the ciphertext
