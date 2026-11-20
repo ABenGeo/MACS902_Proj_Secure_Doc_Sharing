@@ -20,6 +20,8 @@ if "username" not in st.session_state:
     st.session_state.username = None
 if "private_key" not in st.session_state:
     st.session_state.private_key = None
+if "signing_private_key" not in st.session_state:
+    st.session_state.signing_private_key = None
 
 st.markdown(
     "<h1 style='text-align: center;'> Secure Multi-User Document Sharing</h1>",
@@ -44,15 +46,15 @@ if not st.session_state.logged_in:
             )
             login_button = st.form_submit_button("Login")
         if login_button:
-            success, message, user_id, private_key = login_user(
-                username,
-                password
+            success, message, user_id, private_key, signing_private_key = login_user(
+                username, password
             )
             if success:
                 st.session_state.logged_in = True
                 st.session_state.user_id = user_id
                 st.session_state.username = username
                 st.session_state.private_key = private_key
+                st.session_state.signing_private_key = signing_private_key
                 st.success(message)
                 st.rerun()
             else:
@@ -83,10 +85,11 @@ if not st.session_state.logged_in:
                 else:
                     st.error(message)
 else:
-    show_dashboard(st.session_state.username)
+    show_dashboard(st.session_state.username, st.session_state.user_id)
     if st.button("Logout"):
         st.session_state.logged_in = False
         st.session_state.user_id = None
         st.session_state.username = None
         st.session_state.private_key = None
+        st.session_state.signing_private_key = None
         st.rerun()
