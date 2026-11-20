@@ -5,6 +5,8 @@ import base64
 import hmac
 from db import get_connection
 from keys import create_and_store_user_keys, load_user_private_key
+from digital_signatures import create_user_signing_keys
+from digital_signatures import load_user_signing_private_key
 
 def hash_password(password):
     salt = os.urandom(16)
@@ -47,6 +49,7 @@ def register_user(username, password):
         connection.commit()
         user_id = cursor.lastrowid # Gets the newly registered user's ID
         create_and_store_user_keys(user_id, password) # Generates and stores the user's encryption keys
+        create_user_signing_keys(user_id, password) # Generates and stores the user's signing keys
         connection.close()
         return True, "Registration successful! Encryption keys generated."
     except sqlite3.IntegrityError:
@@ -61,7 +64,6 @@ def register_user(username, password):
         connection.close()
         return False, "Registration failed. Please try again."
 
-
 def login_user(username, password):
     connection = get_connection()
     cursor = connection.cursor()
@@ -75,23 +77,14 @@ def login_user(username, password):
         user_id = result[0]
         try:
             private_key = load_user_private_key(user_id, password)
-
+            signing_private_key = load_user_signing_private_key(user_id, password)
             return (
                 True,
-                "Login successful! Private key unlocked.",
+                "Login successful! Encryption and signing keys unlocked.",
                 user_id,
-                private_key
+                private_key,
+                signing_private_key
             )
         except Exception:
-            return (
-                False,
-                "Private key could not be unlocked.",
-                None,
-                None
-            )
-    return (
-        False,
-        "Invalid username or password.",
-        None,
-        None
-    )
+            return False, "Private keys could not be unlocked.", None, None, None
+    return False, "Invalid username or password.", None, None, None
