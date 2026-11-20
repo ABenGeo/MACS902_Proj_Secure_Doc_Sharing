@@ -1,8 +1,5 @@
-
 def create_permissions_table(db_connection):
-
     cursor = db_connection.cursor()
-
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS permissions (
             permission_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,14 +13,10 @@ def create_permissions_table(db_connection):
 
     db_connection.commit()
 
-
 def share_document(owner_id: int, document_id: str,
                    recipient_id: int, db_connection):
-    """Allow a document owner to share a document."""
 
     cursor = db_connection.cursor()
-
-    # Check whether the document exists and belongs to the owner
     cursor.execute("""
         SELECT owner_id FROM documents
         WHERE document_id = ?
@@ -40,7 +33,6 @@ def share_document(owner_id: int, document_id: str,
     if owner_id == recipient_id:
         return False, "You cannot share a document with yourself."
 
-    # Check whether the recipient exists
     cursor.execute("""
         SELECT user_id FROM users
         WHERE user_id = ?
@@ -50,8 +42,6 @@ def share_document(owner_id: int, document_id: str,
 
     if recipient is None:
         return False, "Recipient user not found."
-
-    # Check whether permission already exists
     cursor.execute("""
         SELECT status FROM permissions
         WHERE document_id = ? AND recipient_id = ?
@@ -80,13 +70,8 @@ def share_document(owner_id: int, document_id: str,
 
     return True, "Document shared successfully."
 
-
 def check_access(user_id: int, document_id: str, db_connection):
-    """Check whether a user is allowed to access a document."""
-
     cursor = db_connection.cursor()
-
-    # Check whether the user owns the document
     cursor.execute("""
         SELECT owner_id FROM documents
         WHERE document_id = ?
@@ -100,7 +85,6 @@ def check_access(user_id: int, document_id: str, db_connection):
     if document[0] == user_id:
         return True
 
-    # Check whether the user has active permission
     cursor.execute("""
         SELECT status FROM permissions
         WHERE document_id = ? AND recipient_id = ?
@@ -113,11 +97,7 @@ def check_access(user_id: int, document_id: str, db_connection):
 
 def revoke_access(owner_id: int, document_id: str,
                   recipient_id: int, db_connection):
-    """Allow the document owner to revoke a recipient's access."""
-
     cursor = db_connection.cursor()
-
-    # Verify document ownership
     cursor.execute("""
         SELECT owner_id FROM documents
         WHERE document_id = ?
@@ -131,7 +111,6 @@ def revoke_access(owner_id: int, document_id: str,
     if document[0] != owner_id:
         return False, "Only the document owner can revoke access."
 
-    # Check whether active permission exists
     cursor.execute("""
         SELECT status FROM permissions
         WHERE document_id = ? AND recipient_id = ?
@@ -142,7 +121,6 @@ def revoke_access(owner_id: int, document_id: str,
     if permission is None or permission[0] != "active":
         return False, "No active permission found."
 
-    # Revoke permission
     cursor.execute("""
         UPDATE permissions
         SET status = 'revoked'
@@ -150,6 +128,5 @@ def revoke_access(owner_id: int, document_id: str,
     """, (document_id, recipient_id))
 
     db_connection.commit()
-
     return True, "Access revoked successfully."
 
