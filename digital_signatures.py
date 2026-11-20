@@ -1,14 +1,7 @@
-
 from pathlib import Path
-
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
-
-# ==========================================
-# 1. GENERATE PRIVATE AND PUBLIC KEY
-# ==========================================
 
 def generate_signing_key_pair():
 
@@ -16,11 +9,6 @@ def generate_signing_key_pair():
     public_key = private_key.public_key()
 
     return private_key, public_key
-
-
-# ==========================================
-# 2. SAVE PRIVATE KEY SECURELY
-# ==========================================
 
 def save_private_key(private_key, file_path, password):
 
@@ -37,11 +25,6 @@ def save_private_key(private_key, file_path, password):
 
     Path(file_path).write_bytes(pem_data)
 
-
-# ==========================================
-# 3. LOAD PRIVATE KEY
-# ==========================================
-
 def load_private_key(file_path, password):
 
     pem_data = Path(file_path).read_bytes()
@@ -50,11 +33,6 @@ def load_private_key(file_path, password):
         pem_data,
         password=password.encode("utf-8")
     )
-
-
-# ==========================================
-# 4. SAVE PUBLIC KEY
-# ==========================================
 
 def save_public_key(public_key, file_path):
 
@@ -65,21 +43,11 @@ def save_public_key(public_key, file_path):
 
     Path(file_path).write_bytes(pem_data)
 
-
-# ==========================================
-# 5. LOAD PUBLIC KEY
-# ==========================================
-
 def load_public_key(file_path):
 
     pem_data = Path(file_path).read_bytes()
 
     return serialization.load_pem_public_key(pem_data)
-
-
-# ==========================================
-# 6. CALCULATE SHA-256 HASH
-# ==========================================
 
 def calculate_document_hash(document_data):
 
@@ -88,21 +56,11 @@ def calculate_document_hash(document_data):
 
     return digest.finalize().hex()
 
-
-# ==========================================
-# 7. CREATE DIGITAL SIGNATURE
-# ==========================================
-
 def sign_document(document_data, private_key):
 
     signature = private_key.sign(document_data)
 
     return signature
-
-
-# ==========================================
-# 8. VERIFY DIGITAL SIGNATURE
-# ==========================================
 
 def verify_document(document_data, signature, public_key):
 
