@@ -32,6 +32,20 @@ def create_tables():
             FOREIGN KEY (owner_id) REFERENCES users(user_id)
         )
     """)
+    cursor.execute("PRAGMA table_info(documents)")
+    existing_columns = [
+        column[1] for column in cursor.fetchall()
+    ]
+    if "digital_signature" not in existing_columns:
+        cursor.execute("""
+            ALTER TABLE documents
+            ADD COLUMN digital_signature BLOB
+        """)
+    if "document_hash" not in existing_columns:
+        cursor.execute("""
+            ALTER TABLE documents
+            ADD COLUMN document_hash TEXT
+        """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS document_keys (
             document_id TEXT NOT NULL,
