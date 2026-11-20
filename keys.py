@@ -85,7 +85,7 @@ def create_and_store_user_keys(user_id, password):
     key_file = key_directory / f"user_{user_id}.json" # Saves the encrypted private key locally
     with open(key_file, "w") as file:
         json.dump(protected_data, file)
-    # Save the public key in the database
+    # Saves the public key in the database
     connection = get_connection()
     cursor = connection.cursor()
     cursor.execute(
@@ -271,6 +271,55 @@ def unwrap_aes_key(protected_data, wrapping_key):
         wrapped_key,
         None
     )
+
+def protect_and_store_document_key(
+    aes_key,
+    sender_id,
+    recipient_id,
+    document_id
+):
+    recipient_public_key = get_user_public_key(recipient_id)
+    # Protects the AES key specifically for this recipient
+    sharing_data = prepare_recipient_key(
+        aes_key,
+        recipient_public_key,
+        sender_id,
+        recipient_id,
+        document_id
+    )
+    exchange_data = sharing_data["exchange_data"]
+    protected_key = sharing_data["protected_key"]
+    connection = get_connection() # Stores the protected AES key and exchange metadata
+    try:
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO document_keys (
+                document_id,
+                recipient_id,
+                ephemeral_public_key,
+                salt,
+                nonce,
+                protected_aes_key
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                document_id,
+                recipient_id,
+                exchange_data["ephemeral_public_key"],
+                exchange_data["salt"],
+                protected_key["nonce"],
+                protected_key["wrapped_key"]
+            )
+        )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+    return True
 
 if __name__ == "__main__":
     private_key, public_key = generate_encryption_key_pair()
