@@ -85,6 +85,11 @@ if not st.session_state.logged_in:
                 else:
                     st.error(message)
 else:
+    show_dashboard(
+        st.session_state.username,
+        st.session_state.user_id,
+        st.session_state.private_key
+    )
     show_dashboard(st.session_state.username, st.session_state.user_id)
     if st.button("Logout"):
         st.session_state.logged_in = False

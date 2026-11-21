@@ -1,4 +1,10 @@
 import streamlit as st
+from db import get_connection
+from access_control.permissions import (
+    share_document,
+    check_access,
+    revoke_access
+)
 from pathlib import Path
 import uuid
 from encryption import encrypt_uploaded_file, decrypt_file
@@ -11,6 +17,8 @@ from digital_signatures import (
     verify_document
 )
 
+def show_dashboard(username, user_id, private_key):
+
 def show_dashboard(username, user_id):
     st.markdown(
         f"<h2 style='font-weight: 700;'>Welcome, {username}!</h2>",
@@ -18,17 +26,27 @@ def show_dashboard(username, user_id):
     )
     st.divider()
 
+    # Upload & Protect Document
     st.subheader("Upload & Protect Document")
+    st.write(
+        "Upload your document to encrypt it and apply a digital signature."
+    )
+
     st.write("Upload your document to encrypt it and apply a digital signature.")
     uploaded_file = st.file_uploader(
         "Choose a document",
         type=["pdf", "docx", "txt", "jpg", "png", "xlsx"],
         key="document_upload"
     )
+
     if uploaded_file is not None:
         st.success("Document selected successfully!")
         st.write("**Filename:**", uploaded_file.name)
         st.write("**File size:**", uploaded_file.size, "bytes")
+        st.caption(
+            "The document will be encrypted and digitally signed."
+        )
+
         if st.button("Upload & Encrypt", key="encrypt_document"):
             document_id = str(uuid.uuid4())
             encrypted_folder = Path("encrypted_documents")
@@ -81,7 +99,114 @@ def show_dashboard(username, user_id):
                 st.error(f"Document upload failed: {e}")
     st.divider()
 
+    # My Documents
     st.subheader("My Documents")
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT document_id, original_filename
+        FROM documents
+        WHERE owner_id = ?
+    """, (user_id,))
+    documents = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT user_id, username
+        FROM users
+        WHERE user_id != ?
+    """, (user_id,))
+    users = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT p.document_id, d.original_filename,
+               p.recipient_id, u.username
+        FROM permissions p
+        JOIN documents d ON p.document_id = d.document_id
+        JOIN users u ON p.recipient_id = u.user_id
+        WHERE p.owner_id = ? AND p.status = 'active'
+    """, (user_id,))
+    active_shares = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT d.document_id, d.original_filename, u.username
+        FROM permissions p
+        JOIN documents d ON p.document_id = d.document_id
+        JOIN users u ON d.owner_id = u.user_id
+        WHERE p.recipient_id = ? AND p.status = 'active'
+    """, (user_id,))
+    shared_documents = cursor.fetchall()
+
+    connection.close()
+
+    if documents:
+        for document_id, filename in documents:
+            st.write(f"**{filename}**")
+            st.caption(f"Document ID: {document_id}")
+    else:
+        st.info("You haven't uploaded any documents yet.")
+
+    if shared_documents:
+        st.write("**Documents shared with you:**")
+        for document_id, filename, owner in shared_documents:
+            connection = get_connection()
+            has_access = check_access(user_id, document_id, connection)
+            connection.close()
+
+            if has_access:
+                st.write(f"**{filename}** — Shared by {owner}")
+
+    st.divider()
+    st.subheader("Share Documents")
+
+    if not documents:
+        st.info("Upload a document before sharing it.")
+
+    elif not users:
+        st.info("No other registered users are available.")
+
+    else:
+        document_options = {
+            f"{filename} (ID: {document_id})": document_id
+            for document_id, filename in documents
+        }
+
+        user_options = {
+            f"{name} (ID: {recipient_id})": recipient_id
+            for recipient_id, name in users
+        }
+
+        selected_document = st.selectbox(
+            "Choose a document",
+            list(document_options.keys()),
+            key="share_document"
+        )
+
+        selected_user = st.selectbox(
+            "Choose a recipient",
+            list(user_options.keys()),
+            key="share_recipient"
+        )
+
+        if st.button("Share Document", key="share_button"):
+            connection = get_connection()
+
+            success, message = share_document(
+                user_id,
+                document_options[selected_document],
+                user_options[selected_user],
+                connection
+            )
+
+            connection.close()
+
+            if success:
+                st.success(message)
+                st.rerun()
+            else:
+                st.error(message)
+
     st.write(
         "View your uploaded documents and their security status."
     )
@@ -182,7 +307,31 @@ def show_dashboard(username, user_id):
     else:
         st.info("You have not uploaded any documents yet.")
     st.divider()
+    st.subheader("Manage Access Permissions")
 
+    if active_shares:
+        for document_id, filename, recipient_id, recipient in active_shares:
+            st.write(
+                f"**{filename}** → {recipient} "
+                f"(User ID: {recipient_id})"
+            )
+    else:
+        st.info("No active sharing permissions.")
+
+    st.divider()
+    st.subheader("Revoke Access")
+
+    if active_shares:
+        permission_options = {
+            f"{filename} → {recipient}": (document_id, recipient_id)
+            for document_id, filename, recipient_id, recipient
+            in active_shares
+        }
+
+        selected_permission = st.selectbox(
+            "Select access to revoke",
+            list(permission_options.keys()),
+            key="revoke_permission"
     st.subheader("Sharing & Access Management")
     st.write(
         "Manage who can access your documents and control their permissions."
@@ -191,6 +340,31 @@ def show_dashboard(username, user_id):
         st.write(
             "Select a document and choose registered users to share it with."
         )
+
+        if st.button("Revoke Access", key="revoke_button"):
+            document_id, recipient_id = permission_options[
+                selected_permission
+            ]
+
+            connection = get_connection()
+
+            success, message = revoke_access(
+                user_id,
+                document_id,
+                recipient_id,
+                connection
+            )
+
+            connection.close()
+
+            if success:
+                st.success(message)
+                st.rerun()
+            else:
+                st.error(message)
+    else:
+        st.info("There are no active permissions to revoke.")
+
     with st.expander("Manage Access Permissions"):
         st.write(
             "View users who have access to your documents and manage their permissions."
