@@ -1,5 +1,5 @@
 import sqlite3
-
+from access_control.permissions import create_permissions_table
 database_name = "secure_sharing.db"
 
 def get_connection():
@@ -59,6 +59,7 @@ def create_tables():
             FOREIGN KEY (recipient_id) REFERENCES users(user_id)
         )
     """)
+    create_permissions_table(connection)
     connection.commit()
     connection.close()
 
