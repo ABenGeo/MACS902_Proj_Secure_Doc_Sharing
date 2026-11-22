@@ -1,31 +1,50 @@
+# MACS902 – Secure Multi-User Document Sharing System
 
-# MACS902 – Secure Document Sharing System
+A Python-based secure document-sharing application developed as part of the MACS902 Cryptography Group Project.
 
-A secure document-sharing system developed as part of the MACS902 project.
+## Features
+
+- User registration and login with password hashing.
+- AES-256-GCM document encryption and decryption.
+- X25519 key exchange and HKDF-based key derivation.
+- Ed25519 digital signatures and verification.
+- Secure document sharing between registered users.
+- Access control and permission revocation.
+- Document integrity and tampering detection using AES-GCM, digital signatures and SHA-256 hashing.
+
+## Technologies Used
+
+- Python
+- Streamlit
+- SQLite
+- Cryptography library
 
 ## Project Structure
 
-- `access_control/` – Document ownership, sharing permissions, access verification and revocation.
-- `Database/` – Database operations and storage.
-- `Encryption/` – Cryptographic operations.
+- `main.py` – Application entry point and authentication interface.
+- `dashboard.py` – Document upload, sharing and access management interface.
+- `auth.py` – User authentication and password hashing.
+- `db.py` – Database connection and table creation.
+- `encryption.py` – Document encryption and decryption.
+- `keys.py` – Cryptographic key management.
+- `digital_signatures.py` – Digital signature generation and verification.
+- `access_control/` – Sharing permissions and access revocation.
+- `requirements.txt` – Project dependencies.
 
-## Access Control Implementation
+## Running the Application
 
-The access-control module is implemented using Python and SQLite.
+Install the dependencies:
 
-It includes:
-- Document ownership verification.
-- Document sharing with other users.
-- Recipient access verification.
-- Permission revocation.
-- Validation against unauthorized and duplicate sharing.
+```bash
+pip install -r requirements.txt
+```
 
-## Testing
+Start the application:
 
-The access-control module has been tested using an in-memory SQLite database.
-
-All 11 test scenarios passed, including ownership checks, sharing, access verification and revocation.
+```bash
+streamlit run main.py
+```
 
 ## Project Status
 
-Initial project setup and access-control implementation completed. Database and encryption integration are in progress.
+The integrated prototype has been implemented and functionally tested.
