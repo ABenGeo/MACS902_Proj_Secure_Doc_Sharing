@@ -5,7 +5,6 @@ from dashboard import show_dashboard
 
 create_tables()
 
-# Page configuration
 st.set_page_config(
     page_title="Secure Multi-User Document Sharing",
     layout="centered"
@@ -33,7 +32,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Login and registration screens
 if not st.session_state.logged_in:
     login_tab, register_tab = st.tabs(["Login", "Register"])
     with login_tab:
