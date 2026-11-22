@@ -2,7 +2,6 @@ from pathlib import Path
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
 def generate_signing_key_pair():
     private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key()

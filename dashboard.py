@@ -18,8 +18,6 @@ from digital_signatures import (
 )
 
 def show_dashboard(username, user_id, private_key):
-
-def show_dashboard(username, user_id):
     st.markdown(
         f"<h2 style='font-weight: 700;'>Welcome, {username}!</h2>",
         unsafe_allow_html=True
@@ -324,37 +322,22 @@ def show_dashboard(username, user_id):
     if active_shares:
         permission_options = {
             f"{filename} → {recipient}": (document_id, recipient_id)
-            for document_id, filename, recipient_id, recipient
-            in active_shares
+            for document_id, filename, recipient_id, recipient in active_shares
         }
 
         selected_permission = st.selectbox(
             "Select access to revoke",
             list(permission_options.keys()),
             key="revoke_permission"
-    st.subheader("Sharing & Access Management")
-    st.write(
-        "Manage who can access your documents and control their permissions."
-    )
-    with st.expander("Share Documents"):
-        st.write(
-            "Select a document and choose registered users to share it with."
         )
 
         if st.button("Revoke Access", key="revoke_button"):
-            document_id, recipient_id = permission_options[
-                selected_permission
-            ]
+            document_id, recipient_id = permission_options[selected_permission]
 
             connection = get_connection()
-
             success, message = revoke_access(
-                user_id,
-                document_id,
-                recipient_id,
-                connection
+                user_id, document_id, recipient_id, connection
             )
-
             connection.close()
 
             if success:
@@ -363,16 +346,8 @@ def show_dashboard(username, user_id):
             else:
                 st.error(message)
     else:
-        st.info("There are no active permissions to revoke.")
+        st.info("No active sharing permissions to revoke.")
 
-    with st.expander("Manage Access Permissions"):
-        st.write(
-            "View users who have access to your documents and manage their permissions."
-        )
-    with st.expander("Revoke Access"):
-        st.write(
-            "Remove a user's access to a previously shared document."
-        )
     st.divider()
 
     st.caption(
