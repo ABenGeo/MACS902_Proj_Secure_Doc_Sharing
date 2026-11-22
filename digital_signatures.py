@@ -2,6 +2,7 @@ from pathlib import Path
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 def generate_signing_key_pair():
     private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
@@ -53,36 +54,26 @@ def verify_document(document_data, signature, public_key):
     except InvalidSignature:
         return False
 
-
 def create_user_signing_keys(user_id, password):
     signing_folder = Path("signing_keys")
     signing_folder.mkdir(exist_ok=True)
-
     private_key_path = signing_folder / f"user_{user_id}_private.pem"
     public_key_path = signing_folder / f"user_{user_id}_public.pem"
-
     if private_key_path.exists() or public_key_path.exists():
         raise FileExistsError("Signing keys already exist for this user.")
-
     private_key, public_key = generate_signing_key_pair()
-
     save_private_key(private_key, private_key_path, password)
     save_public_key(public_key, public_key_path)
-
     return True
-
 
 def load_user_signing_private_key(user_id, password):
     private_key_path = (
         Path("signing_keys") / f"user_{user_id}_private.pem"
     )
-
     return load_private_key(private_key_path, password)
-
 
 def load_user_signing_public_key(user_id):
     public_key_path = (
         Path("signing_keys") / f"user_{user_id}_public.pem"
     )
-
     return load_public_key(public_key_path)
